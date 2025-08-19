@@ -76,45 +76,38 @@ if (isSingleBookingPage) {
 
 // ------------------- ALL BOOKINGS PAGE (bookings.html) -------------------
 if (isAllBookingsPage) {
-  async function loadBookings() {
-    try {
-      const res = await fetch(`${API_URL}/bookings`);
-      if (!res.ok) throw new Error("Failed to fetch bookings");
+  const API_URL = "https://vehicle-rental-vxjx.onrender.com/api";
 
-      const bookings = await res.json();
-      console.log("Bookings loaded:", bookings);
+async function loadBookings() {
+  try {
+    const res = await fetch(`${API_URL}/bookings`);
+    const bookings = await res.json();
 
-      const tableBody = document.querySelector("#bookingsTable tbody");
-      tableBody.innerHTML = "";
+    const tbody = document.querySelector("#bookings-table tbody");
+    tbody.innerHTML = "";
 
-      if (bookings.length === 0) {
-        document.getElementById("noBookings").style.display = "block";
-        return;
-      }
-
-      for (const booking of bookings) {
-        // ✅ vehicle info comes from `.populate("vehicle")`
-        const vehicleInfo = booking.vehicle
-          ? `${booking.vehicle.make} ${booking.vehicle.model} (${booking.vehicle.year})`
-          : "Unknown Vehicle";
-
-        const row = `
-          <tr>
-            <td>${vehicleInfo}</td>
-            <td>${booking.userName}</td>
-            <td>${booking.userEmail}</td>
-            <td>${new Date(booking.startDate).toLocaleDateString()}</td>
-            <td>${new Date(booking.endDate).toLocaleDateString()}</td>
-            <td>₹${booking.totalPrice}</td>
-          </tr>
-        `;
-        tableBody.insertAdjacentHTML("beforeend", row);
-      }
-    } catch (err) {
-      console.error("Error loading bookings:", err);
-      document.getElementById("noBookings").style.display = "block";
+    if (bookings.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">⚠️ No bookings found.</td></tr>`;
+      return;
     }
-  }
 
-  loadBookings();
+    bookings.forEach(b => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${b.vehicle?.make} ${b.vehicle?.model}</td>
+          <td>${b.userName}</td>
+          <td>${b.userEmail}</td>
+          <td>${new Date(b.startDate).toLocaleDateString()}</td>
+          <td>${new Date(b.endDate).toLocaleDateString()}</td>
+          <td>₹${b.totalPrice}</td>
+        </tr>
+      `;
+    });
+  } catch (err) {
+    console.error("Error loading bookings:", err);
+  }
+}
+
+loadBookings();
+
 }
