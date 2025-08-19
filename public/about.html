@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Developers</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .about-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            text-align: center;
+        }
+        .about-container h2 {
+            margin-bottom: 30px;
+            color: #1e3d59;
+        }
+        .developer-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 0 20px;
+        }
+        .developer-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .developer-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .developer-card img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            border: 3px solid #1e3d59;
+        }
+        .developer-card h3 {
+            margin-bottom: 8px;
+            color: #1e3d59;
+        }
+        .developer-card p {
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <nav class="navbar">
+        <div class="logo">Rent-A-Vehicle</div>
+        <ul class="nav-links">
+            <li><a href="about.html" class="active">About Developers</a></li>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="bookings.html">Bookings</a></li>
+            <li><a href="login.html">Login</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <div class="about-container">
+        <h2>Meet the Developers</h2>
+        <div class="developer-list">
+            <a href="https://www.linkedin.com/in/nikhil-kumar-jha-800070319/" target="_blank" class="developer-card">
+                <img src="images/nikhil.jpg" alt="Nikhil Kumar Jha">
+                <h3>Nikhil Kumar Jha</h3>
+                <p><strong>Engineering Student | AI Intern | Passionate About Data Science & Machine Learning | Building the Future One Model at a Time</strong></p>
+                <p>I'm a third-year B.Tech student at Kalinga Institute of Industrial Technology (KIIT), Bhubaneswar, specializing in Computer Science Engineering. Passionate about technology and problem-solving, I have developed a solid foundation in programming languages such as C, C++, Python, Java, and am actively honing my skills in web development, game development and Machine Learning with Python.
+
+In addition to my technical expertise, I focus on building essential soft skills like leadership, communication, and analytical thinking. I'm particularly interested in projects that allow me to apply these skills in real-world scenarios, enhancing both my technical and project management abilities.
+
+I'm always open to learning and collaborating on innovative projects that push the boundaries of technology.</p>
+            </a>
+            <a href="https://www.linkedin.com/in/harsh-srivastava-4054a4283/" target="_blank" class="developer-card">
+                <img src="images/harsh.jpg" alt="Harsh Srivastava">
+                <h3>Harsh Srivastava</h3>
+                <p><strong>B.Tech CSE Student | Python, Flask, C++, ML | Ex AI Intern | Building Real-World Projects</strong></p>
+                <p>I'm a Computer Science student at KIIT, actively building my foundation in Artificial Intelligence, Web Development, and programming with C and Java. I'm passionate about technology and always eager to learn new skills through hands-on experience. I'm particularly interested in roles related to software development, AI, or web technologies, and I'm excited to collaborate with experienced teams and learn from them.
+
+If you're looking for a motivated and curious intern, I'd love to connect and explore how I can contribute to your team!</p>
+            </a>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <p>© 2025 Rent-A-Vehicle | Developed by Nikhil Kumar Jha & Harsh Srivastava</p>
+</footer>
+</body>
+</html>

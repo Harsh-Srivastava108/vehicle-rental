@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select Vehicle</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <nav class="navbar">
+    <div class="logo">Rent-A-Vehicle</div>
+    <ul class="nav-links">
+      <li><a href="about.html">About Developers</a></li>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="bookings.html">Bookings</a></li>
+      <li><a href="login.html">Login</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <center><h2 id="categoryTitle">Available Vehicles</h2></center>
+  <section class="vehicle-listings" id="modelList"></section>
+</main>
+
+<footer>
+  <p>© 2025 Rent-A-Vehicle | Developed by Nikhil Kumar Jha & Harsh Srivastava</p>
+</footer>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const category = params.get("category"); // Car / Bike / Scooty
+  document.getElementById("categoryTitle").textContent = `Available ${category}s`;
+
+  const container = document.getElementById("modelList");
+
+  async function loadVehicles() {
+    try {
+      // Fetch all vehicles from backend
+      const res = await fetch("http://localhost:5000/api/vehicles");
+      if (!res.ok) throw new Error("Failed to fetch vehicles");
+
+      const vehicles = await res.json();
+      console.log("Vehicle object:", vehicle);
+
+      // Filter by category (type in backend is stored as Car/Bike/Scooty)
+      const filtered = vehicles.filter(
+        (v) => v.type.toLowerCase() === category.toLowerCase()
+      );
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p>No vehicles available for this category.</p>`;
+        return;
+      }
+
+      container.innerHTML = "";
+      filtered.forEach((vehicle) => {
+        container.innerHTML += `
+          <div class="vehicle-card">
+            <img src="${vehicle.imageUrl || "images/default.jpeg"}" 
+                 alt="${vehicle.make} ${vehicle.model}">
+            <h3>${vehicle.make} ${vehicle.model} (${vehicle.year})</h3>
+            <p>Price: ₹${vehicle.pricePerDay}/day</p>
+            <button onclick="bookNow('${vehicle._id}')">Book Now</button>
+          </div>
+        `;
+      });
+    } catch (err) {
+      console.error("Error loading vehicles:", err);
+      container.innerHTML = "<p>⚠️ Failed to load vehicles.</p>";
+    }
+  }
+
+  function bookNow(vehicleId) {
+    if (!vehicleId) {
+      alert("⚠️ Vehicle ID missing. Please try again.");
+      return;
+    }
+    console.log("Redirecting to booking page with ID:", vehicleId); // debug
+    window.location.href = `booking.html?vehicleId=${vehicleId}`;
+  }
+
+  // Load vehicles on page load
+  loadVehicles();
+</script>
+</body>
+</html>

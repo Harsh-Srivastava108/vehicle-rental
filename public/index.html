@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent-A-Vehicle</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+    <nav class="navbar">
+        <div class="logo">Rent-A-Vehicle</div>
+        <ul class="nav-links">
+            <li><a href="about.html">About Developers</a></li>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="bookings.html">Bookings</a></li> 
+            <li><a href="login.html">Login</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <section class="filter-section">
+        <input type="text" id="searchBox" placeholder="Search Vehicles">
+        <select id="vehicleType">
+            <option value="">All Types</option>
+            <option value="4 Wheeler">4 Wheeler</option>
+            <option value="2 Wheeler">2 Wheeler</option>
+        </select>
+        <button onclick="searchAndBook()">Search</button>
+        <button onclick="filterVehicles()">Filter</button>
+    </section>
+    <section class="vehicle-listings" id="vehicleList"></section>
+</main>
+
+<footer>
+    <p>© 2025 Rent-A-Vehicle | Developed by Nikhil Kumar Jha & Harsh Srivastava</p>
+</footer>
+
+<script src="script.js"></script>
+
+<script>
+    function searchAndBook() {
+        const searchText = document.getElementById('searchBox').value.trim().toLowerCase();
+        
+        const allVehicles = [
+            { name: "Honda City", price: 1200, image: "images/honda_city.jpeg" },
+            { name: "Maruti Swift", price: 1000, image: "images/swift-1.jpeg" },
+            { name: "Hyundai Creta", price: 1500, image: "images/hyundai-creta.jpeg" },
+            { name: "Toyota Innova", price: 1800, image: "images/innova.jpeg" },
+            { name: "Tata Nexon", price: 1100, image: "images/nexon.jpeg" },
+            { name: "Yamaha FZ", price: 500, image: "images/yamaha.jpeg" },
+            { name: "Royal Enfield", price: 700, image: "images/enfield.jpeg" },
+            { name: "Honda Shine", price: 400, image: "images/shine.jpeg" },
+            { name: "Bajaj Pulsar", price: 500, image: "images/pulsar.jpeg" },
+            { name: "Hero Splendor", price: 300, image: "images/splendor.jpeg" },
+            { name: "Honda Activa", price: 400, image: "images/activa.jpeg" },
+            { name: "TVS Jupiter", price: 350, image: "images/jupiter.jpeg" },
+            { name: "Hero Maestro", price: 400, image: "images/maestro.jpeg" },
+            { name: "Bajaj Chetak", price: 250, image: "images/chetak.jpeg" },
+            { name: "Electric Scooty", price: 200, image: "images/electric.jpeg" }
+        ];
+
+        const match = allVehicles.find(v => v.name.toLowerCase() === searchText);
+
+        if (match) {
+            window.location.href = `booking.html?name=${encodeURIComponent(match.name)}&price=${match.price}&image=${encodeURIComponent(match.image)}`;
+        } else {
+            alert("No vehicle found with that name.");
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Bookings</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <nav class="navbar">
+    <div class="logo">Rent-A-Vehicle</div>
+    <ul class="nav-links">
+      <li><a href="about.html">About Developers</a></li>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="bookings.html" class="active">Bookings</a></li>
+      <li><a href="login.html">Login</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="booking-list-container">
+    <h2>📋 Your Bookings</h2>
+    <table id="bookingsTable" border="1" cellpadding="10" cellspacing="0">
+      <thead>
+        <tr>
+          <th>Vehicle</th>
+          <th>User</th>
+          <th>Email</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Total Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Filled dynamically -->
+      </tbody>
+    </table>
+    <p id="noBookings" style="display:none; color:red;">⚠️ No bookings found.</p>
+  </div>
+</main>
+
+<footer>
+  <p>© 2025 Rent-A-Vehicle | Developed by Nikhil Kumar Jha & Harsh Srivastava</p>
+</footer>
+
+<script src="bookings.js"></script>
+</body>
+</html>
