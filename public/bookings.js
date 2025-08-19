@@ -1,3 +1,6 @@
+// --- Config ---
+const API_URL = "https://vehicle-rental-vxjx.onrender.com/api";
+
 // Detect which page we are on
 const isSingleBookingPage = window.location.pathname.includes("booking.html");
 const isAllBookingsPage = window.location.pathname.includes("bookings.html");
@@ -17,7 +20,7 @@ if (isSingleBookingPage) {
   // ✅ Load vehicle details
   async function loadVehicle() {
     try {
-      const res = await fetch(`http://localhost:5000/api/vehicles/${vehicleId}`);
+      const res = await fetch(`${API_URL}/vehicles/${vehicleId}`);
       if (!res.ok) throw new Error("Failed to fetch vehicle");
 
       const vehicle = await res.json();
@@ -43,7 +46,7 @@ if (isSingleBookingPage) {
     e.preventDefault();
 
     const bookingData = {
-      vehicleId, // backend will store under `vehicle`
+      vehicle: vehicleId, // backend expects field `vehicle`
       userName: this.fullname.value,
       userEmail: this.email.value,
       startDate: this.startdate.value,
@@ -52,7 +55,7 @@ if (isSingleBookingPage) {
     };
 
     try {
-      const res = await fetch("http://localhost:5000/api/bookings", {
+      const res = await fetch(`${API_URL}/bookings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bookingData)
@@ -75,7 +78,7 @@ if (isSingleBookingPage) {
 if (isAllBookingsPage) {
   async function loadBookings() {
     try {
-      const res = await fetch("http://localhost:5000/api/bookings");
+      const res = await fetch(`${API_URL}/bookings`);
       if (!res.ok) throw new Error("Failed to fetch bookings");
 
       const bookings = await res.json();
@@ -90,7 +93,7 @@ if (isAllBookingsPage) {
       }
 
       for (const booking of bookings) {
-        // ✅ now vehicle info comes directly from `.populate("vehicle")`
+        // ✅ vehicle info comes from `.populate("vehicle")`
         const vehicleInfo = booking.vehicle
           ? `${booking.vehicle.make} ${booking.vehicle.model} (${booking.vehicle.year})`
           : "Unknown Vehicle";
