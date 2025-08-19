@@ -1,3 +1,6 @@
+// --- API Base URL ---
+const API_URL = "https://vehicle-rental-vxjx.onrender.com/api";
+
 // --- Extract vehicleId from URL ---
 const params = new URLSearchParams(window.location.search);
 const vehicleId = params.get("vehicleId");
@@ -16,7 +19,7 @@ async function loadVehicle() {
   try {
     console.log("Fetching vehicle details for ID:", vehicleId);
 
-    const res = await fetch(`http://localhost:5000/api/vehicles/${vehicleId}`);
+    const res = await fetch(`${API_URL}/vehicles/${vehicleId}`);
     if (!res.ok) throw new Error(`Vehicle not found (status: ${res.status})`);
 
     const vehicle = await res.json();
@@ -51,21 +54,18 @@ document.getElementById("bookingForm").addEventListener("submit", async function
   e.preventDefault();
 
   const bookingData = {
-  vehicleId: vehicleId, // must match MongoDB ID
-  userName: this.fullname.value,
-  userEmail: this.email.value,
-  startDate: this.startdate.value,
-  endDate: this.enddate.value,
-  totalPrice: Number(document.getElementById("totalPrice").value)
-};
-
-
-
+    vehicle: vehicleId, // 👈 must match schema field "vehicle"
+    userName: this.fullname.value,
+    userEmail: this.email.value,
+    startDate: this.startdate.value,
+    endDate: this.enddate.value,
+    totalPrice: Number(document.getElementById("totalPrice").value),
+  };
 
   console.log("Submitting booking:", bookingData);
 
   try {
-    const res = await fetch("http://localhost:5000/api/bookings", {
+    const res = await fetch(`${API_URL}/bookings`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(bookingData),
