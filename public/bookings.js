@@ -80,34 +80,33 @@ if (isAllBookingsPage) {
 
 async function loadBookings() {
   try {
-    const res = await fetch(`${API_URL}/bookings`);
-    const bookings = await res.json();
+    const token = localStorage.getItem("token");
 
-    const tbody = document.querySelector("#bookings-table tbody");
-    tbody.innerHTML = "";
-
-    if (bookings.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">⚠️ No bookings found.</td></tr>`;
+    if (!token) {
+      alert("⚠️ You must be logged in to view your bookings.");
+      window.location.href = "login.html"; // redirect to login if not logged in
       return;
     }
 
-    bookings.forEach(b => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${b.vehicle?.make} ${b.vehicle?.model}</td>
-          <td>${b.userName}</td>
-          <td>${b.userEmail}</td>
-          <td>${new Date(b.startDate).toLocaleDateString()}</td>
-          <td>${new Date(b.endDate).toLocaleDateString()}</td>
-          <td>₹${b.totalPrice}</td>
-        </tr>
-      `;
+    const res = await fetch(`${API_URL}/bookings`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`, // attach token
+      },
     });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Failed to fetch bookings");
+    }
+
+    const bookings = await res.json();
+    renderBookings(bookings);
   } catch (err) {
     console.error("Error loading bookings:", err);
+    alert("❌ Could not load bookings. Please try again.");
   }
-}
 
-loadBookings();
 
 }
