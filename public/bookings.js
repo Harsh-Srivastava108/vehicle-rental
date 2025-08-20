@@ -1,5 +1,5 @@
-// --- Config ---
-const API_URL = "https://vehicle-rental-vxjx.onrender.com/api";
+// bookings.js
+const API_URL = "http://localhost:5000/api"; // change if your backend runs elsewhere
 
 // Detect which page we are on
 const isSingleBookingPage = window.location.pathname.includes("booking.html");
@@ -10,43 +10,19 @@ if (isSingleBookingPage) {
   const params = new URLSearchParams(window.location.search);
   const vehicleId = params.get("vehicleId");
 
-  console.log("VehicleId from URL:", vehicleId);
-
-  if (!vehicleId) {
-    alert("⚠️ No vehicle selected. Redirecting...");
-    window.location.href = "index.html";
-  }
-
-  // ✅ Load vehicle details
-  async function loadVehicle() {
-    try {
-      const res = await fetch(`${API_URL}/vehicles/${vehicleId}`);
-      if (!res.ok) throw new Error("Failed to fetch vehicle");
-
-      const vehicle = await res.json();
-      console.log("Vehicle loaded:", vehicle);
-
-      document.getElementById("vehicleName").textContent =
-        `${vehicle.make} ${vehicle.model} (${vehicle.year})`;
-      document.getElementById("vehicleImage").src = vehicle.imageUrl || "images/default.jpeg";
-      document.getElementById("vehiclePrice").textContent =
-        `Price: ₹${vehicle.pricePerDay}/day`;
-
-      // store price in hidden field
-      document.getElementById("totalPrice").value = vehicle.pricePerDay;
-    } catch (err) {
-      console.error("Error loading vehicle:", err);
-      alert("❌ Failed to load vehicle details.");
-      window.location.href = "index.html";
-    }
-  }
-
-  // ✅ Handle booking form submit
+  // Handle booking form submit
   document.getElementById("bookingForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
+    const token = localStorage.getItem("token"); // get token
+    if (!token) {
+      alert("⚠️ You must be logged in to make a booking.");
+      window.location.href = "login.html";
+      return;
+    }
+
     const bookingData = {
-      vehicle: vehicleId, // backend expects field `vehicle`
+      vehicle: vehicleId,
       userName: this.fullname.value,
       userEmail: this.email.value,
       startDate: this.startdate.value,
@@ -57,11 +33,17 @@ if (isSingleBookingPage) {
     try {
       const res = await fetch(`${API_URL}/bookings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` // ✅ send token
+        },
         body: JSON.stringify(bookingData)
       });
 
-      if (!res.ok) throw new Error("Booking failed");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Booking failed");
+      }
 
       alert(`✅ Booking confirmed for ${bookingData.userName}`);
       window.location.href = "bookings.html";
@@ -70,43 +52,51 @@ if (isSingleBookingPage) {
       alert("❌ Failed to create booking");
     }
   });
-
-  loadVehicle();
 }
 
 // ------------------- ALL BOOKINGS PAGE (bookings.html) -------------------
 if (isAllBookingsPage) {
-  const API_URL = "https://vehicle-rental-vxjx.onrender.com/api";
-
-async function loadBookings() {
-  try {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      alert("⚠️ You must be logged in to view your bookings.");
-      window.location.href = "login.html"; // redirect to login if not logged in
-      return;
-    }
-
-    const res = await fetch(`${API_URL}/bookings`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`, // attach token
-      },
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || "Failed to fetch bookings");
-    }
-
-    const bookings = await res.json();
-    renderBookings(bookings);
-  } catch (err) {
-    console.error("Error loading bookings:", err);
-    alert("❌ Could not load bookings. Please try again.");
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("⚠️ Please log in first.");
+    window.location.href = "login.html";
+  } else {
+    fetchBookings(token);
   }
 
+  async function fetchBookings(token) {
+    try {
+      const res = await fetch(`${API_URL}/bookings`, {
+        headers: { "Authorization": `Bearer ${token}` } // ✅ send token
+      });
 
+      if (!res.ok) throw new Error("Failed to fetch bookings");
+
+      const bookings = await res.json();
+      const bookingsList = document.getElementById("bookingsList");
+      bookingsList.innerHTML = "";
+
+      if (bookings.length === 0) {
+        bookingsList.innerHTML = "<p>No bookings found.</p>";
+        return;
+      }
+
+      bookings.forEach(b => {
+        const div = document.createElement("div");
+        div.className = "booking-card";
+        div.innerHTML = `
+          <h3>${b.vehicle?.brand || "Unknown Vehicle"} - ${b.vehicle?.model || ""}</h3>
+          <p><strong>Name:</strong> ${b.userName}</p>
+          <p><strong>Email:</strong> ${b.userEmail}</p>
+          <p><strong>Start:</strong> ${new Date(b.startDate).toLocaleDateString()}</p>
+          <p><strong>End:</strong> ${new Date(b.endDate).toLocaleDateString()}</p>
+          <p><strong>Total Price:</strong> ₹${b.totalPrice}</p>
+        `;
+        bookingsList.appendChild(div);
+      });
+    } catch (err) {
+      console.error("Error fetching bookings:", err);
+      document.getElementById("bookingsList").innerHTML = "<p>❌ Failed to load bookings.</p>";
+    }
+  }
 }
