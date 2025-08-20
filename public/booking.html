@@ -108,6 +108,7 @@ document.querySelector("[name='startdate']").addEventListener("change", calculat
 document.querySelector("[name='enddate']").addEventListener("change", calculateTotalPrice);
 
 // ✅ Handle form submit
+// ✅ Handle form submit
 document.getElementById("bookingForm").addEventListener("submit", async function(e) {
   e.preventDefault();
 
@@ -131,10 +132,21 @@ document.getElementById("bookingForm").addEventListener("submit", async function
     totalPrice: totalPrice,
   };
 
+  // ✅ Get token from localStorage
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("⚠️ You must be logged in to make a booking.");
+    window.location.href = "login.html";
+    return;
+  }
+
   try {
     const res = await fetch(`${API_URL}/bookings`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`   // ✅ Attach token here
+      },
       body: JSON.stringify(bookingData),
     });
 
@@ -150,6 +162,7 @@ document.getElementById("bookingForm").addEventListener("submit", async function
     alert("❌ Failed to confirm booking. Try again.");
   }
 });
+
 
 // Load vehicle details
 loadVehicle();
