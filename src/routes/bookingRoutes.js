@@ -1,4 +1,3 @@
-// src/routes/bookingRoutes.js
 import express from "express";
 import Booking from "../models/booking.js";
 import Vehicle from "../models/vehicle.js";
@@ -7,8 +6,7 @@ import auth from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
 /**
- * 📌 GET all bookings (with vehicle details populated)
- * Protected route → only logged-in users should access their own bookings.
+ * 📌 GET all bookings for the logged-in user (with vehicle details)
  */
 router.get("/", auth, async (req, res) => {
   try {
@@ -19,7 +17,7 @@ router.get("/", auth, async (req, res) => {
     res.json(bookings);
   } catch (err) {
     console.error("❌ Error fetching bookings:", err);
-    res.status(500).json({ error: "Failed to fetch bookings" });
+    res.status(500).json({ message: "Failed to fetch bookings" });
   }
 });
 
@@ -34,7 +32,6 @@ router.get("/:id", auth, async (req, res) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    // Security → user can only access their own booking
     if (booking.userEmail !== req.user.email) {
       return res.status(403).json({ message: "Unauthorized access" });
     }
@@ -42,34 +39,33 @@ router.get("/:id", auth, async (req, res) => {
     res.json(booking);
   } catch (err) {
     console.error("❌ Error fetching booking:", err);
-    res.status(500).json({ error: "Failed to fetch booking" });
+    res.status(500).json({ message: "Failed to fetch booking" });
   }
 });
 
 /**
- * 📌 POST new booking
+ * 📌 POST → Create a new booking
  */
 router.post("/", auth, async (req, res) => {
   try {
-    const { vehicleId, vehicle, startDate, endDate, totalPrice } = req.body;
+    const { vehicleId, startDate, endDate, totalPrice } = req.body;
 
-    const finalVehicleId = vehicleId || vehicle; // support both keys
+    if (!vehicleId || !startDate || !endDate || !totalPrice) {
+      return res.status(400).json({ message: "Missing required booking fields" });
+    }
 
-    // ✅ User info from JWT
-    const userEmail = req.user.email;
-    const userName = req.user.email.split("@")[0]; // later replace with user profile
-
-    // Check if vehicle exists
-    const foundVehicle = await Vehicle.findById(finalVehicleId);
+    // ✅ Verify vehicle exists
+    const foundVehicle = await Vehicle.findById(vehicleId);
     if (!foundVehicle) {
       return res.status(404).json({ message: "Vehicle not found" });
     }
 
-    // Check if vehicle is already booked during the requested period
+    // ✅ Prevent overlapping bookings
     const overlappingBooking = await Booking.findOne({
-      vehicle: finalVehicleId,
-      $or: [
-        { startDate: { $lte: endDate }, endDate: { $gte: startDate } },
+      vehicle: vehicleId,
+      $and: [
+        { startDate: { $lte: new Date(endDate) } },
+        { endDate: { $gte: new Date(startDate) } },
       ],
     });
 
@@ -77,8 +73,13 @@ router.post("/", auth, async (req, res) => {
       return res.status(400).json({ message: "Vehicle already booked for these dates" });
     }
 
+    // ✅ Get user details from JWT
+    const userEmail = req.user.email;
+    const userName = req.user.email.split("@")[0];
+
+    // ✅ Create booking
     const booking = new Booking({
-      vehicle: finalVehicleId,
+      vehicle: vehicleId,
       userName,
       userEmail,
       startDate,
@@ -87,10 +88,12 @@ router.post("/", auth, async (req, res) => {
     });
 
     const savedBooking = await booking.save();
+    await savedBooking.populate("vehicle");
+
     res.status(201).json(savedBooking);
   } catch (err) {
     console.error("❌ Error creating booking:", err);
-    res.status(400).json({ message: err.message || "Bad Request" });
+    res.status(500).json({ message: "Failed to create booking" });
   }
 });
 
@@ -113,7 +116,7 @@ router.delete("/:id", auth, async (req, res) => {
     res.json({ message: "Booking cancelled successfully" });
   } catch (err) {
     console.error("❌ Error deleting booking:", err);
-    res.status(500).json({ error: "Failed to cancel booking" });
+    res.status(500).json({ message: "Failed to cancel booking" });
   }
 });
 
