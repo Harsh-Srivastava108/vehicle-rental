@@ -1,78 +1,84 @@
-// bookings.js
-const API_URL = "http://localhost:5000/api"; // change if your backend runs elsewhere
-
 // Detect which page we are on
 const isSingleBookingPage = window.location.pathname.includes("booking.html");
 const isAllBookingsPage = window.location.pathname.includes("bookings.html");
+
+// ------------------- TOKEN HANDLER -------------------
+function getToken() {
+  return localStorage.getItem("token");
+}
+
+function checkAuth() {
+  const token = getToken();
+  if (!token) {
+    alert("You must be logged in first.");
+    window.location.href = "login.html";
+  }
+  return token;
+}
 
 // ------------------- SINGLE BOOKING PAGE (booking.html) -------------------
 if (isSingleBookingPage) {
   const params = new URLSearchParams(window.location.search);
   const vehicleId = params.get("vehicleId");
 
-  // Handle booking form submit
-  document.getElementById("bookingForm").addEventListener("submit", async function (e) {
+  document.getElementById("bookingForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const token = localStorage.getItem("token"); // get token
-    if (!token) {
-      alert("⚠️ You must be logged in to make a booking.");
-      window.location.href = "login.html";
-      return;
-    }
+    const token = checkAuth(); // Ensure user is logged in
+    if (!token) return;
 
-    const bookingData = {
-      vehicle: vehicleId,
-      userName: this.fullname.value,
-      userEmail: this.email.value,
-      startDate: this.startdate.value,
-      endDate: this.enddate.value,
-      totalPrice: document.getElementById("totalPrice").value
-    };
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+    const totalPrice = document.getElementById("totalPrice").value;
 
     try {
-      const res = await fetch(`${API_URL}/bookings`, {
+      const response = await fetch("http://localhost:5000/api/bookings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` // ✅ send token
+          "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify(bookingData)
+        body: JSON.stringify({
+          vehicleId,
+          startDate,
+          endDate,
+          totalPrice
+        })
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Booking failed");
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
       }
 
-      alert(`✅ Booking confirmed for ${bookingData.userName}`);
-      window.location.href = "bookings.html";
-    } catch (err) {
-      console.error("Error booking:", err);
-      alert("❌ Failed to create booking");
+      const data = await response.json();
+      alert("Booking created successfully!");
+      window.location.href = "bookings.html"; // Redirect to all bookings page
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      alert("Failed to create booking. Please try again.");
     }
   });
 }
 
 // ------------------- ALL BOOKINGS PAGE (bookings.html) -------------------
 if (isAllBookingsPage) {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("⚠️ Please log in first.");
-    window.location.href = "login.html";
-  } else {
-    fetchBookings(token);
-  }
+  async function fetchBookings() {
+    const token = checkAuth(); // Ensure user is logged in
+    if (!token) return;
 
-  async function fetchBookings(token) {
     try {
-      const res = await fetch(`${API_URL}/bookings`, {
-        headers: { "Authorization": `Bearer ${token}` } // ✅ send token
+      const response = await fetch("http://localhost:5000/api/bookings", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
       });
 
-      if (!res.ok) throw new Error("Failed to fetch bookings");
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
 
-      const bookings = await res.json();
+      const bookings = await response.json();
+
       const bookingsList = document.getElementById("bookingsList");
       bookingsList.innerHTML = "";
 
@@ -81,22 +87,22 @@ if (isAllBookingsPage) {
         return;
       }
 
-      bookings.forEach(b => {
+      bookings.forEach(booking => {
         const div = document.createElement("div");
         div.className = "booking-card";
         div.innerHTML = `
-          <h3>${b.vehicle?.brand || "Unknown Vehicle"} - ${b.vehicle?.model || ""}</h3>
-          <p><strong>Name:</strong> ${b.userName}</p>
-          <p><strong>Email:</strong> ${b.userEmail}</p>
-          <p><strong>Start:</strong> ${new Date(b.startDate).toLocaleDateString()}</p>
-          <p><strong>End:</strong> ${new Date(b.endDate).toLocaleDateString()}</p>
-          <p><strong>Total Price:</strong> ₹${b.totalPrice}</p>
+          <p><strong>Vehicle:</strong> ${booking.vehicle?.name || "N/A"}</p>
+          <p><strong>Start Date:</strong> ${booking.startDate}</p>
+          <p><strong>End Date:</strong> ${booking.endDate}</p>
+          <p><strong>Total Price:</strong> ₹${booking.totalPrice}</p>
         `;
         bookingsList.appendChild(div);
       });
-    } catch (err) {
-      console.error("Error fetching bookings:", err);
-      document.getElementById("bookingsList").innerHTML = "<p>❌ Failed to load bookings.</p>";
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      alert("Failed to load bookings.");
     }
   }
+
+  fetchBookings();
 }
