@@ -3,42 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>All Bookings</title>
-  <link rel="stylesheet" href="style.css">
+  <title>My Bookings</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header>
-  <nav class="navbar">
-    <div class="logo">Rent-A-Vehicle</div>
-    <ul class="nav-links">
-      <li><a href="about.html">About Developers</a></li>
-      <li><a href="index.html">Home</a></li>
-      <li><a href="bookings.html" class="active">Bookings</a></li>
-      <li><a href="login.html">Login</a></li>
-    </ul>
-  </nav>
-</header>
+  <h1>My Bookings</h1>
 
-<main>
-  <div class="booking-list-container">
-   <h2>📋 Your Bookings</h2>
-<table id="bookings-table" border="1" style="width:100%; border-collapse:collapse; text-align:center;">
-  <thead>
-    <tr>
-      <th>Vehicle</th>
-      <th>User</th>
-      <th>Email</th>
-      <th>Start Date</th>
-      <th>End Date</th>
-      <th>Total Price</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td colspan="6">Loading...</td></tr>
-  </tbody>
-</table>
+  <div id="bookingsList">
+    <p>Loading your bookings...</p>
+  </div>
 
-<script src="bookings.js"></script>
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You must log in to view bookings");
+      window.location.href = "login.html";
+    } else {
+      fetch("/api/bookings", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          const bookingsList = document.getElementById("bookingsList");
+          bookingsList.innerHTML = "";
 
+          if (data.length === 0) {
+            bookingsList.innerHTML = "<p>No bookings found.</p>";
+            return;
+          }
+
+          data.forEach(b => {
+            const div = document.createElement("div");
+            div.className = "booking-card";
+            div.innerHTML = `
+              <p><strong>Vehicle:</strong> ${b.vehicleId}</p>
+              <p><strong>From:</strong> ${b.startDate}</p>
+              <p><strong>To:</strong> ${b.endDate}</p>
+              <p><strong>Total Price:</strong> Rs.${b.totalPrice}</p>
+            `;
+            bookingsList.appendChild(div);
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("bookingsList").innerHTML =
+            "<p>Error loading bookings.</p>";
+        });
+    }
+  </script>
 </body>
 </html>
