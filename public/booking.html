@@ -9,75 +9,20 @@
 <body>
   <h1>Book Vehicle</h1>
 
-  <form id="bookingForm">
-    <label for="startDate">Start Date:</label>
-    <input type="date" id="startDate" required><br><br>
+  <div id="vehicle-details">
+    <p><strong>Vehicle:</strong> <span id="vehicle-name"></span></p>
+    <p><strong>Model:</strong> <span id="vehicle-model"></span></p>
+    <p><strong>Price per day:</strong> $<span id="vehicle-price"></span></p>
+  </div>
 
-    <label for="endDate">End Date:</label>
-    <input type="date" id="endDate" required><br><br>
-
-    <p>Total Price: <span id="totalPrice">0</span></p>
-
+  <form id="booking-form">
+    <label>Start Date: <input type="date" id="start-date" required></label><br>
+    <label>End Date: <input type="date" id="end-date" required></label><br>
+    <p>Total Price: $<span id="total-price">0</span></p>
     <button type="submit">Confirm Booking</button>
   </form>
 
-  <script>
-    // Get vehicleId from query string
-    const params = new URLSearchParams(window.location.search);
-    const vehicleId = params.get("vehicleId");
-
-    const startDateInput = document.getElementById("startDate");
-    const endDateInput = document.getElementById("endDate");
-    const totalPriceSpan = document.getElementById("totalPrice");
-
-    // Example: Assume Rs.1000 per day
-    const pricePerDay = 1000;
-
-    function calculateTotalPrice() {
-      const start = new Date(startDateInput.value);
-      const end = new Date(endDateInput.value);
-
-      if (start && end && end >= start) {
-        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-        totalPriceSpan.innerText = days * pricePerDay;
-      }
-    }
-
-    startDateInput.addEventListener("change", calculateTotalPrice);
-    endDateInput.addEventListener("change", calculateTotalPrice);
-
-    // Handle booking form submit
-    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("You must log in to book a vehicle");
-        return;
-      }
-
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          vehicleId,
-          startDate: startDateInput.value,
-          endDate: endDateInput.value,
-          totalPrice: totalPriceSpan.innerText
-        })
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        alert("Booking successful!");
-        window.location.href = "bookings.html";
-      } else {
-        alert(data.message || "Booking failed");
-      }
-    });
-  </script>
+  <script src="booking.js"></script>
 </body>
+
 </html>
