@@ -1,41 +1,46 @@
 import express from "express";
-import Booking from "../models/booking.js";
-import authMiddleware from "../middlewares/authMiddleware.js";
+import { v4 as uuidv4 } from "uuid";
+import auth from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Create booking
-router.post("/", authMiddleware, async (req, res) => {
-  try {
-    const { vehicleId, startDate, endDate, totalPrice } = req.body;
+// In-memory store (replace with DB later)
+let bookings = [];
 
-    if (!vehicleId || !startDate || !endDate || !totalPrice) {
-      return res.status(400).json({ message: "All fields are required" });
+// Create a booking
+router.post("/", auth, (req, res) => {
+  try {
+    const { vehicleId, name, email, date } = req.body;
+
+    if (!vehicleId || !name || !email || !date) {
+      return res.status(400).json({ error: "All fields are required" });
     }
 
-    const booking = new Booking({
-      vehicle: vehicleId,
-      user: req.user.id, // coming from authMiddleware
-      startDate,
-      endDate,
-      totalPrice,
-    });
+    const newBooking = {
+      id: uuidv4(),
+      vehicleId,
+      name,
+      email,
+      date,
+      userId: req.user.id, // from token
+    };
 
-    await booking.save();
-    res.status(201).json({ message: "Booking created", booking });
-  } catch (error) {
-    console.error("Booking error:", error);
-    res.status(500).json({ message: "Server error" });
+    bookings.push(newBooking);
+    res.status(201).json(newBooking);
+  } catch (err) {
+    res.status(500).json({ error: "Server error while creating booking" });
   }
 });
 
-// Get bookings for logged-in user
-router.get("/", authMiddleware, async (req, res) => {
+// Get all bookings for logged-in user
+router.get("/", auth, (req, res) => {
   try {
-    const bookings = await Booking.find({ user: req.user.id }).populate("vehicle");
-    res.json(bookings);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    const userBookings = bookings.filter(
+      (booking) => booking.userId === req.user.id
+    );
+    res.json(userBookings);
+  } catch (err) {
+    res.status(500).json({ error: "Server error while fetching bookings" });
   }
 });
 
