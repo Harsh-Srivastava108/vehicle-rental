@@ -1,5 +1,5 @@
 // src/server.js
-import bookingRoutes from './routes/bookingRoutes.js'; // ✅ Add booking routes
+import bookingRoutes from './src/routes/bookingRoutes.js'; // ✅ Add booking routes
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
