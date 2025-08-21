@@ -58,7 +58,7 @@
   // ✅ Fetch vehicle details
   async function loadVehicle() {
     try {
-      const res = await fetch(/api/vehicles/${vehicleId}`);
+      const res = await fetch(`/api/vehicles/${vehicleId}`);
       if (!res.ok) throw new Error("Failed to fetch vehicle");
       selectedVehicle = await res.json();
 
