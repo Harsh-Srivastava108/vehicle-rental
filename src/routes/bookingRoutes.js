@@ -1,36 +1,55 @@
+
 import express from "express";
-import { v4 as uuidv4 } from "uuid";
-import auth from "../middleware/auth.js";
+import Booking from "../models/booking.js";
+import Vehicle from "../models/vehicle.js";
+import auth from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// In-memory store (replace with DB later)
-let bookings = [];
-
-// Create a booking
-router.post("/", async (req, res) => {
+// 📌 GET all bookings with vehicle populated
+router.get("/", async (req, res) => {
   try {
-    const { vehicleId, startDate, endDate, price } = req.body;
-    
-    const booking = new Booking({ vehicleId, startDate, endDate, price });
-    await booking.save();
-
-    res.json({ message: "Booking created successfully", booking });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    const bookings = await Booking.find().populate("vehicle");
+    res.json(bookings);
+  } catch (err) {
+    console.error("Error fetching bookings:", err);
+    res.status(500).json({ error: "Failed to fetch bookings" });
   }
 });
 
-// Get all bookings for logged-in user
-router.get("/", auth, (req, res) => {
+// 📌 POST new booking (protected by auth)
+router.post("/", auth, async (req, res) => {
   try {
-    const userBookings = bookings.filter(
-      (booking) => booking.userId === req.user.id
-    );
-    res.json(userBookings);
+    const { vehicleId, vehicle, startDate, endDate, totalPrice } = req.body;
+
+    const finalVehicleId = vehicleId || vehicle; // handle both cases
+
+    // ✅ User info from JWT
+    const userEmail = req.user.email;
+    const userName = req.user.email.split("@")[0]; // later replace with real user profile
+
+    // Check if vehicle exists
+    const foundVehicle = await Vehicle.findById(finalVehicleId);
+    if (!foundVehicle) {
+      return res.status(404).json({ message: "Vehicle not found" });
+    }
+
+    const booking = new Booking({
+      vehicle: finalVehicleId,
+      userName,
+      userEmail,
+      startDate,
+      endDate,
+      totalPrice,
+    });
+
+    const savedBooking = await booking.save();
+    res.status(201).json(savedBooking);
   } catch (err) {
-    res.status(500).json({ error: "Server error while fetching bookings" });
+    console.error("❌ Error creating booking:", err);
+    res.status(400).json({ message: err.message || "Bad Request" });
   }
 });
 
 export default router;
+
