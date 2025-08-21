@@ -18,33 +18,28 @@ router.get("/", async (req, res) => {
 });
 
 // 📌 POST new booking (protected by auth)
-router.post("/", auth, async (req, res) => {
-  try {
-    const { vehicleId, vehicle, startDate, endDate, totalPrice } = req.body;
+router.post("/",  async (req, res) => {
+  const { vehicleId, vehicle, startDate, endDate, totalPrice, userName, userEmail } = req.body;
 
-    const finalVehicleId = vehicleId || vehicle; // handle both cases
+const finalVehicleId = vehicleId || vehicle;
 
-    // ✅ User info from JWT
-    const userEmail = req.user.email;
-    const userName = req.user.email.split("@")[0]; // later replace with real user profile
+// Check if vehicle exists
+const foundVehicle = await Vehicle.findById(finalVehicleId);
+if (!foundVehicle) {
+  return res.status(404).json({ message: "Vehicle not found" });
+}
 
-    // Check if vehicle exists
-    const foundVehicle = await Vehicle.findById(finalVehicleId);
-    if (!foundVehicle) {
-      return res.status(404).json({ message: "Vehicle not found" });
-    }
+const booking = new Booking({
+  vehicle: finalVehicleId,
+  userName,
+  userEmail,
+  startDate,
+  endDate,
+  totalPrice,
+});
 
-    const booking = new Booking({
-      vehicle: finalVehicleId,
-      userName,
-      userEmail,
-      startDate,
-      endDate,
-      totalPrice,
-    });
-
-    const savedBooking = await booking.save();
-    res.status(201).json(savedBooking);
+const savedBooking = await booking.save();
+res.status(201).json(savedBooking);
   } catch (err) {
     console.error("❌ Error creating booking:", err);
     res.status(400).json({ message: err.message || "Bad Request" });
