@@ -2,107 +2,116 @@
 const isSingleBookingPage = window.location.pathname.includes("booking.html");
 const isAllBookingsPage = window.location.pathname.includes("bookings.html");
 
-// ------------------- TOKEN HANDLER -------------------
-function getToken() {
-  return localStorage.getItem("token");
-}
-
-function checkAuth() {
-  const token = getToken();
-  if (!token) {
-    alert("You must be logged in first.");
-    window.location.href = "login.html";
-  }
-  return token;
-}
-
 // ------------------- SINGLE BOOKING PAGE (booking.html) -------------------
 if (isSingleBookingPage) {
   const params = new URLSearchParams(window.location.search);
   const vehicleId = params.get("vehicleId");
 
-  document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+  console.log("VehicleId from URL:", vehicleId);
+
+  if (!vehicleId) {
+    alert("⚠️ No vehicle selected. Redirecting...");
+    window.location.href = "index.html";
+  }
+
+  // ✅ Load vehicle details
+  async function loadVehicle() {
+    try {
+      const res = await fetch(`http://localhost:5000/api/vehicles/${vehicleId}`);
+      if (!res.ok) throw new Error("Failed to fetch vehicle");
+
+      const vehicle = await res.json();
+      console.log("Vehicle loaded:", vehicle);
+
+      document.getElementById("vehicleName").textContent =
+        `${vehicle.make} ${vehicle.model} (${vehicle.year})`;
+      document.getElementById("vehicleImage").src = vehicle.imageUrl || "images/default.jpeg";
+      document.getElementById("vehiclePrice").textContent =
+        `Price: ₹${vehicle.pricePerDay}/day`;
+
+      // store price in hidden field
+      document.getElementById("totalPrice").value = vehicle.pricePerDay;
+    } catch (err) {
+      console.error("Error loading vehicle:", err);
+      alert("❌ Failed to load vehicle details.");
+      window.location.href = "index.html";
+    }
+  }
+
+  // ✅ Handle booking form submit
+  document.getElementById("bookingForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const token = checkAuth(); // Ensure user is logged in
-    if (!token) return;
-
-    const startDate = document.getElementById("startDate").value;
-    const endDate = document.getElementById("endDate").value;
-    const totalPrice = document.getElementById("totalPrice").value;
+    const bookingData = {
+      vehicleId, // backend will store under `vehicle`
+      userName: this.fullname.value,
+      userEmail: this.email.value,
+      startDate: this.startdate.value,
+      endDate: this.enddate.value,
+      totalPrice: document.getElementById("totalPrice").value
+    };
 
     try {
-      const response = await fetch("http://localhost:5000/api/bookings", {
+      const res = await fetch("http://localhost:5000/api/bookings", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          vehicleId,
-          startDate,
-          endDate,
-          totalPrice
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingData)
       });
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
+      if (!res.ok) throw new Error("Booking failed");
 
-      const data = await response.json();
-      alert("Booking created successfully!");
-      window.location.href = "bookings.html"; // Redirect to all bookings page
-    } catch (error) {
-      console.error("Error creating booking:", error);
-      alert("Failed to create booking. Please try again.");
+      alert(`✅ Booking confirmed for ${bookingData.userName}`);
+      window.location.href = "bookings.html";
+    } catch (err) {
+      console.error("Error booking:", err);
+      alert("❌ Failed to create booking");
     }
   });
+
+  loadVehicle();
 }
 
 // ------------------- ALL BOOKINGS PAGE (bookings.html) -------------------
 if (isAllBookingsPage) {
-  async function fetchBookings() {
-    const token = checkAuth(); // Ensure user is logged in
-    if (!token) return;
-
+  async function loadBookings() {
     try {
-      const response = await fetch("http://localhost:5000/api/bookings", {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
+      const res = await fetch("http://localhost:5000/api/bookings");
+      if (!res.ok) throw new Error("Failed to fetch bookings");
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
+      const bookings = await res.json();
+      console.log("Bookings loaded:", bookings);
 
-      const bookings = await response.json();
-
-      const bookingsList = document.getElementById("bookingsList");
-      bookingsList.innerHTML = "";
+      const tableBody = document.querySelector("#bookingsTable tbody");
+      tableBody.innerHTML = "";
 
       if (bookings.length === 0) {
-        bookingsList.innerHTML = "<p>No bookings found.</p>";
+        document.getElementById("noBookings").style.display = "block";
         return;
       }
 
-      bookings.forEach(booking => {
-        const div = document.createElement("div");
-        div.className = "booking-card";
-        div.innerHTML = `
-          <p><strong>Vehicle:</strong> ${booking.vehicle?.name || "N/A"}</p>
-          <p><strong>Start Date:</strong> ${booking.startDate}</p>
-          <p><strong>End Date:</strong> ${booking.endDate}</p>
-          <p><strong>Total Price:</strong> ₹${booking.totalPrice}</p>
+      for (const booking of bookings) {
+        // ✅ now vehicle info comes directly from `.populate("vehicle")`
+        const vehicleInfo = booking.vehicle
+          ? `${booking.vehicle.make} ${booking.vehicle.model} (${booking.vehicle.year})`
+          : "Unknown Vehicle";
+
+        const row = `
+          <tr>
+            <td>${vehicleInfo}</td>
+            <td>${booking.userName}</td>
+            <td>${booking.userEmail}</td>
+            <td>${new Date(booking.startDate).toLocaleDateString()}</td>
+            <td>${new Date(booking.endDate).toLocaleDateString()}</td>
+            <td>₹${booking.totalPrice}</td>
+          </tr>
         `;
-        bookingsList.appendChild(div);
-      });
-    } catch (error) {
-      console.error("Error fetching bookings:", error);
-      alert("Failed to load bookings.");
+        tableBody.insertAdjacentHTML("beforeend", row);
+      }
+    } catch (err) {
+      console.error("Error loading bookings:", err);
+      document.getElementById("noBookings").style.display = "block";
     }
   }
 
-  fetchBookings();
+  loadBookings();
 }
