@@ -1,10 +1,9 @@
 let vehicles = []; // will hold vehicles from backend
-const API_URL = "https://vehicle-rental-vxjx.onrender.com/api";
 
 // Fetch vehicles from backend API
 async function loadVehicles() {
   try {
-    const res = await fetch(`${API_URL}/vehicles`);
+    const res = await fetch("http://localhost:5000/api/vehicles");  
     if (!res.ok) throw new Error("Failed to fetch vehicles");
 
     vehicles = await res.json(); // store in global variable
