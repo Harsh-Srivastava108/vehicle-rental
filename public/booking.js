@@ -16,7 +16,7 @@ async function loadVehicle() {
   try {
     console.log("Fetching vehicle details for ID:", vehicleId);
 
-    const res = await fetch(`http://localhost:5000/api/vehicles/${vehicleId}`);
+    const res = await fetch(`/api/vehicles/${vehicleId}`);
     if (!res.ok) throw new Error(`Vehicle not found (status: ${res.status})`);
 
     const vehicle = await res.json();
