@@ -8,27 +8,16 @@ const router = express.Router();
 let bookings = [];
 
 // Create a booking
-router.post("/", auth, (req, res) => {
+router.post("/", async (req, res) => {
   try {
-    const { vehicleId, name, email, date } = req.body;
+    const { vehicleId, startDate, endDate, price } = req.body;
+    
+    const booking = new Booking({ vehicleId, startDate, endDate, price });
+    await booking.save();
 
-    if (!vehicleId || !name || !email || !date) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
-
-    const newBooking = {
-      id: uuidv4(),
-      vehicleId,
-      name,
-      email,
-      date,
-      userId: req.user.id, // from token
-    };
-
-    bookings.push(newBooking);
-    res.status(201).json(newBooking);
-  } catch (err) {
-    res.status(500).json({ error: "Server error while creating booking" });
+    res.json({ message: "Booking created successfully", booking });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
