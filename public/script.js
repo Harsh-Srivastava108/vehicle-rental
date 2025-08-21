@@ -3,7 +3,7 @@ let vehicles = []; // will hold vehicles from backend
 // Fetch vehicles from backend API
 async function loadVehicles() {
   try {
-    const res = await fetch("http://localhost:5000/api/vehicles");  
+    const res = await fetch("/api/vehicles");  
     if (!res.ok) throw new Error("Failed to fetch vehicles");
 
     vehicles = await res.json(); // store in global variable
