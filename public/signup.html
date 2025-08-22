@@ -10,19 +10,12 @@
 <header>
     <nav class="navbar">
         <div class="logo">Rent-A-Vehicle</div>
-        <ul class="nav-links">
-            <li><a href="about.html">About Developers</a></li>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="bookings.html">Bookings</a></li>
-            <li><a href="login.html">Login</a></li>
-            <li><a href="signup.html" class="active">Signup</a></li>
-        </ul>
     </nav>
 </header>
 
 <main>
     <div class="form-container">
-        <h2>Create an Account</h2>
+        <h2>Signup</h2>
         <form id="signupForm">
             <label>Full Name:</label>
             <input type="text" name="fullname" required>
@@ -31,7 +24,7 @@
             <input type="email" name="email" required>
 
             <label>Password:</label>
-            <input type="password" name="password" required minlength="6">
+            <input type="password" name="password" required>
 
             <button type="submit">Signup</button>
         </form>
@@ -47,17 +40,13 @@
     document.getElementById("signupForm").addEventListener("submit", function(e) {
         e.preventDefault();
 
-        const fullname = this.fullname.value.trim();
-        const email = this.email.value.trim();
-        const password = this.password.value;
+        const user = {
+            fullname: this.fullname.value,
+            email: this.email.value,
+            password: this.password.value
+        };
 
-        if (!fullname || !email || !password) {
-            alert("All fields are required!");
-            return;
-        }
-
-        // Save to localStorage (later replaced with backend API)
-        const user = { fullname, email, password };
+        // Save to localStorage
         localStorage.setItem("user", JSON.stringify(user));
 
         alert("Signup successful! Redirecting to Home...");
