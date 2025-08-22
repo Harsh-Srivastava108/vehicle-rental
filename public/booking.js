@@ -12,37 +12,35 @@ if (!vehicleId || vehicleId === "null" || vehicleId === "undefined") {
 }
 
 // --- Fetch vehicle details from backend ---
+const API_BASE = "https://vehicle-rental-vxjx.onrender.com/api";
+
+// --- Fetch vehicle details from backend ---
 async function loadVehicle() {
   try {
     console.log("Fetching vehicle details for ID:", vehicleId);
 
-    const res = await fetch(`/api/vehicles/${vehicleId}`);
+    const res = await fetch(`${API_BASE}/vehicles/${vehicleId}`);
     if (!res.ok) throw new Error(`Vehicle not found (status: ${res.status})`);
 
     const vehicle = await res.json();
     console.log("Vehicle loaded:", vehicle);
 
-    // ✅ Ensure vehicle object has required fields
     if (!vehicle || !vehicle.make || !vehicle.model) {
       throw new Error("Invalid vehicle data received from backend");
     }
 
-    // --- Update booking page with vehicle info ---
     document.getElementById("vehicleImage").src =
       vehicle.imageUrl || "images/default.jpeg";
-    document.getElementById("vehicleImage").alt =
-      `${vehicle.make} ${vehicle.model}`;
     document.getElementById("vehicleName").textContent =
       `${vehicle.make} ${vehicle.model} (${vehicle.year || "N/A"})`;
     document.getElementById("vehiclePrice").textContent =
       `Price: ₹${vehicle.pricePerDay || 0}/day`;
 
-    // --- Store price in hidden field ---
     document.getElementById("totalPrice").value = vehicle.pricePerDay || 0;
   } catch (err) {
     console.error("❌ Error loading vehicle:", err.message);
     alert("❌ Failed to load vehicle details. Redirecting...");
-    window.location.href = "index.html"; // fallback redirect
+    window.location.href = "index.html";
   }
 }
 
@@ -51,21 +49,18 @@ document.getElementById("bookingForm").addEventListener("submit", async function
   e.preventDefault();
 
   const bookingData = {
-  vehicleId: vehicleId, // must match MongoDB ID
-  userName: this.fullname.value,
-  userEmail: this.email.value,
-  startDate: this.startdate.value,
-  endDate: this.enddate.value,
-  totalPrice: Number(document.getElementById("totalPrice").value)
-};
-
-
-
+    vehicleId,
+    userName: this.fullname.value,
+    userEmail: this.email.value,
+    startDate: this.startdate.value,
+    endDate: this.enddate.value,
+    totalPrice: Number(document.getElementById("totalPrice").value)
+  };
 
   console.log("Submitting booking:", bookingData);
 
   try {
-    const res = await fetch("https://vehicle-rental-vxjx.onrender.com/api/bookings", {
+    const res = await fetch(`${API_BASE}/bookings`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(bookingData),
