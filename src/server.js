@@ -1,5 +1,4 @@
-
-import bookingRoutes from './routes/bookingRoutes.js'; // ✅ Add booking routes
+import bookingRoutes from './routes/bookingRoutes.js';
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -31,18 +30,22 @@ app.use(morgan('dev'));
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve static frontend files
-app.use(express.static(path.join(__dirname, '../public')));
+// ✅ Serve static frontend files with caching
+app.use(express.static(path.join(__dirname, '../public'), {
+  maxAge: '1d', // Cache files for 1 day
+  etag: true,   // Enable ETag headers
+  lastModified: true // Enable Last-Modified header
+}));
 
 // API Routes
 app.use('/api/vehicles', vehicleRoutes);
-app.use('/api/bookings', bookingRoutes); // ✅ Booking API
+app.use('/api/bookings', bookingRoutes);
 app.use("/api/auth", authRoutes);
 
+// Fallback route
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
-
 
 // Start Server
 const PORT = process.env.PORT || 5000;
