@@ -10,13 +10,6 @@
 <header>
     <nav class="navbar">
         <div class="logo">Rent-A-Vehicle</div>
-        <ul class="nav-links">
-            <li><a href="about.html">About Developers</a></li>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="bookings.html">Bookings</a></li>
-            <li><a href="login.html" class="active">Login</a></li>
-            <li><a href="signup.html">Signup</a></li>
-        </ul>
     </nav>
 </header>
 
@@ -32,7 +25,7 @@
 
             <button type="submit">Login</button>
         </form>
-        <p>Don’t have an account? <a href="signup.html">Signup here</a></p>
+        <p>Don't have an account? <a href="signup.html">Signup here</a></p>
     </div>
 </main>
 
@@ -47,14 +40,13 @@
         const email = this.email.value.trim();
         const password = this.password.value;
 
-        // Fetch user from localStorage
         const storedUser = JSON.parse(localStorage.getItem("user"));
 
         if (storedUser && storedUser.email === email && storedUser.password === password) {
-            alert(`Welcome back, ${storedUser.fullname}!`);
+            alert(`Welcome back, ${storedUser.fullname}! Redirecting to Home...`);
             window.location.href = "index.html";
         } else {
-            alert("Invalid email or password. Please try again!");
+            alert("Invalid email or password. Try again!");
         }
     });
 </script>
