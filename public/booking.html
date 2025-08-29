@@ -1,152 +1,192 @@
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Please login first!");
+        window.location.href = "login.html";
+    }
+});
+</script>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Booking</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<header>
-  <nav class="navbar">
-    <div class="logo">Rent-A-Vehicle</div>
-    <ul class="nav-links">
-      <li><a href="about.html">About Developers</a></li>
-      <li><a href="index.html">Home</a></li>
-      <li><a href="bookings.html">Bookings</a></li>
-      <li><a href="login.html">Login</a></li>
-    </ul>
-  </nav>
-</header>
+  <header>
+    <nav class="navbar">
+      <div class="logo">Rent-A-Vehicle</div>
+      <ul class="nav-links">
+        <li><a href="about.html">About Developers</a></li>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="bookings.html">Bookings</a></li>
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </nav>
+  </header>
 
-<main>
-  <div class="booking-container">
-    <h2 id="vehicleName"></h2>
-    <img id="vehicleImage" src="" alt="Vehicle">
-    <p id="vehiclePrice"></p>
+  <main>
+    <div class="booking-container">
+      <div id="vehicleDetails"></div>
 
-    <form id="bookingForm">
-      <label>Full Name:</label>
-      <input type="text" name="fullname" required>
+      <form id="bookingForm">
+        <label>Full Name:</label>
+        <input type="text" name="fullname" required>
 
-      <label>Email:</label>
-      <input type="email" name="email" required>
+        <label>Email:</label>
+        <input type="email" name="email" required>
 
-      <label>Start Date:</label>
-      <input type="date" name="startdate" required>
+        <label>Start Date:</label>
+        <input type="date" name="startdate" required>
 
-      <label>End Date:</label>
-      <input type="date" name="enddate" required>
+        <label>End Date:</label>
+        <input type="date" name="enddate" required>
 
-      <p id="calculatedPrice" style="font-weight:bold; color:green;"></p>
+        <p id="calculatedPrice" style="font-weight:bold; color:green;"></p>
 
-      <button type="submit">Confirm Booking</button>
-    </form>
-  </div>
-</main>
+        <button type="submit">Confirm Booking</button>
+      </form>
+    </div>
+  </main>
 
-<footer>
-  <p>© 2025 Rent-A-Vehicle | Developed by Nikhil Kumar Jha & Harsh Srivastava</p>
-</footer>
+  <footer>
+    <p>© 2025 Rent-A-Vehicle | Developed by Nikhil Kumar Jha & Harsh Srivastava</p>
+  </footer>
 
 <script>
-  const params = new URLSearchParams(window.location.search);
-  const vehicleId = params.get("vehicleId");
+    const params = new URLSearchParams(window.location.search);
+    const vehicleId = params.get("vehicleId");
 
-  let selectedVehicle = null;
+    const startDateInput = document.querySelector("[name='startdate']");
+    const endDateInput = document.querySelector("[name='enddate']");
 
-  // ✅ Fetch vehicle details
-  async function loadVehicle() {
-    try {
-      const res = await fetch(`/api/vehicles/${vehicleId}`);
-      if (!res.ok) throw new Error("Failed to fetch vehicle");
-      selectedVehicle = await res.json();
+    const today = new Date().toISOString().split("T")[0];
+    
+    startDateInput.setAttribute("min", today);
 
-      document.getElementById("vehicleName").textContent =
-        `${selectedVehicle.make} ${selectedVehicle.model} (${selectedVehicle.year})`;
-      document.getElementById("vehicleImage").src = selectedVehicle.imageUrl || "images/default.jpeg";
-      document.getElementById("vehiclePrice").textContent =
-        `Price: ₹${selectedVehicle.pricePerDay}/day`;
-    } catch (err) {
-      console.error("Error loading vehicle:", err);
-      document.querySelector(".booking-container").innerHTML = "<p>⚠️ Failed to load vehicle details.</p>";
-    }
-  }
+    startDateInput.addEventListener("change", () => {
+        if (startDateInput.value) {
+            const selectedDate = new Date(startDateInput.value);
+            selectedDate.setDate(selectedDate.getDate() + 1);
+            const minEndDate = selectedDate.toISOString().split("T")[0];
+            endDateInput.setAttribute("min", minEndDate);
 
-  // ✅ Function to calculate total price
-  function calculateTotalPrice() {
-    const startDate = new Date(document.querySelector("[name='startdate']").value);
-    const endDate = new Date(document.querySelector("[name='enddate']").value);
+            if (endDateInput.value < minEndDate) {
+                endDateInput.value = "";
+            }
+        }
+        calculateTotalPrice(); 
+    });
 
-    if (!selectedVehicle || isNaN(startDate) || isNaN(endDate)) {
-      document.getElementById("calculatedPrice").textContent = "";
-      return;
+    if (!vehicleId || vehicleId === "null" || vehicleId === "undefined") {
+      alert("⚠️ No vehicle selected. Redirecting...");
+      window.location.href = "index.html";
     }
 
-    const diffTime = endDate - startDate;
-    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // inclusive of start date
-    if (days <= 0) {
-      document.getElementById("calculatedPrice").textContent = "⚠️ End date must be after start date";
-      return;
-    }
+    let selectedVehicle = null;
 
-    const total = days * selectedVehicle.pricePerDay;
-    document.getElementById("calculatedPrice").textContent = `Total Price: ₹${total}`;
-    return total;
-  }
+    async function loadVehicle() {
+      try {
+        const res = await fetch(`http://localhost:5000/api/vehicles/${vehicleId}`);
+        if (!res.ok) throw new Error("Failed to fetch vehicle");
+        selectedVehicle = await res.json();
 
-  // ✅ Attach date change listeners
-  document.querySelector("[name='startdate']").addEventListener("change", calculateTotalPrice);
-  document.querySelector("[name='enddate']").addEventListener("change", calculateTotalPrice);
+        const detailsContainer = document.getElementById("vehicleDetails");
+        detailsContainer.innerHTML = `
+          <div class="vehicle-card">
+            <img src="${selectedVehicle.imageUrl}" alt="${selectedVehicle.make} ${selectedVehicle.model}" />
+            <h2>${selectedVehicle.make} ${selectedVehicle.model} (${selectedVehicle.year})</h2>
+            <p><strong>Price:</strong> ₹${selectedVehicle.pricePerDay}/day</p>
+            <p><strong>Status:</strong> ${selectedVehicle.available ? "✅ Available" : "❌ Not Available"}</p>
+          </div>
+        `;
 
-  // ✅ Handle form submit
-  document.getElementById("bookingForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
-
-    if (!selectedVehicle) {
-      alert("Vehicle details not loaded yet.");
-      return;
-    }
-
-    const totalPrice = calculateTotalPrice();
-    if (!totalPrice) {
-      alert("Please select valid dates.");
-      return;
-    }
-
-    const bookingData = {
-      vehicle: selectedVehicle._id,   // 👈 matches schema now
-      userName: this.fullname.value,
-      userEmail: this.email.value,
-      startDate: this.startdate.value,
-      endDate: this.enddate.value,
-      totalPrice: totalPrice
-    };
-
-
-    try {
-      const res = await fetch("http://localhost:5000/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingData)
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Booking failed");
+        if (!selectedVehicle.available) {
+          document.getElementById("bookingForm").style.display = "none";
+          alert("This vehicle is currently unavailable for booking.");
         }
 
-
-      alert(`✅ Booking confirmed for ${selectedVehicle.make} ${selectedVehicle.model}\nTotal: ₹${totalPrice}`);
-      window.location.href = "bookings.html";
-    } catch (err) {
-      console.error("Error creating booking:", err);
-      alert("❌ Failed to confirm booking. Try again.");
+      } catch (err) {
+        console.error(err);
+        document.querySelector(".booking-container").innerHTML = "<p>⚠️ Failed to load vehicle details.</p>";
+      }
     }
-  });
+    
+    function calculateTotalPrice() {
+      const startDate = new Date(document.querySelector("[name='startdate']").value);
+      const endDate = new Date(document.querySelector("[name='enddate']").value);
 
-  // Load vehicle details
-  loadVehicle();
-</script>
+      if (!selectedVehicle || isNaN(startDate) || isNaN(endDate)) {
+        document.getElementById("calculatedPrice").textContent = "";
+        return;
+      }
+
+      const diffTime = endDate - startDate;
+      const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (days <= 0) {
+        document.getElementById("calculatedPrice").textContent = "⚠️ End date must be after start date";
+        return;
+      }
+
+      const total = days * selectedVehicle.pricePerDay;
+      document.getElementById("calculatedPrice").textContent = `Total Price: ₹${total}`;
+      return total;
+    }
+
+    endDateInput.addEventListener("change", calculateTotalPrice);
+
+    document.getElementById("bookingForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      if (!selectedVehicle) return alert("Vehicle details not loaded yet.");
+
+      const totalPrice = calculateTotalPrice();
+      if (!totalPrice) return alert("Please select valid dates.");
+
+      const bookingData = {
+        vehicle: selectedVehicle._id,
+        userName: this.fullname.value,
+        userEmail: this.email.value,
+        startDate: this.startdate.value,
+        endDate: this.enddate.value,
+        totalPrice: totalPrice
+      };
+
+        const token = localStorage.getItem("token");
+      if (!token) {
+        alert("⚠️ Please login first");
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:5000/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingData)
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Booking failed");
+        }
+
+        alert(`✅ Booking confirmed for ${selectedVehicle.make} ${selectedVehicle.model}\nTotal: ₹${totalPrice}`);
+        window.location.href = "bookings.html";
+
+      } catch (err) {
+        console.error(err);
+        alert("❌ Failed to confirm booking. Try again.");
+      }
+    });
+
+    loadVehicle();
+  </script>
+
 </body>
+
 </html>
