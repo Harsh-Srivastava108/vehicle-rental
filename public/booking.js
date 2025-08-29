@@ -1,80 +1,78 @@
-/ --- Extract vehicleId from URL ---
+
 const params = new URLSearchParams(window.location.search);
 const vehicleId = params.get("vehicleId");
 
-console.log("VehicleId from URL:", vehicleId); // ✅ Debug log
-
-// --- Validate vehicleId ---
 if (!vehicleId || vehicleId === "null" || vehicleId === "undefined") {
-  alert("⚠️ No vehicle selected. Redirecting to home...");
-  console.error("Missing or invalid vehicleId in URL:", vehicleId);
+  alert("⚠️ No vehicle selected. Redirecting...");
   window.location.href = "index.html";
 }
 
-// --- Fetch vehicle details from backend ---
-const API_BASE = "https://vehicle-rental-vxjx.onrender.com/api";
-
-// --- Fetch vehicle details from backend ---
 async function loadVehicle() {
   try {
-    console.log("Fetching vehicle details for ID:", vehicleId);
-
-    const res = await fetch(`${API_BASE}/vehicles/${vehicleId}`);
-    if (!res.ok) throw new Error(`Vehicle not found (status: ${res.status})`);
-
+    const res = await fetch(`/api/vehicles/${vehicleId}`);
+    if (!res.ok) throw new Error("Failed to fetch vehicle");
     const vehicle = await res.json();
-    console.log("Vehicle loaded:", vehicle);
 
-    if (!vehicle || !vehicle.make || !vehicle.model) {
-      throw new Error("Invalid vehicle data received from backend");
-    }
+    document.getElementById("vehicleDetails").innerHTML = `
+      <div class="vehicle-card">
+        <img src="${vehicle.imageUrl || "images/default.jpeg"}" alt="${vehicle.make} ${vehicle.model}">
+        <h2>${vehicle.make} ${vehicle.model} (${vehicle.year})</h2>
+        <p><strong>Price:</strong> ₹${vehicle.pricePerDay}/day</p>
+        <p><strong>Status:</strong> ${vehicle.available ? "✅ Available" : "❌ Not Available"}</p>
+      </div>
+    `;
 
-    document.getElementById("vehicleImage").src =
-      vehicle.imageUrl || "images/default.jpeg";
-    document.getElementById("vehicleName").textContent =
-      `${vehicle.make} ${vehicle.model} (${vehicle.year || "N/A"})`;
-    document.getElementById("vehiclePrice").textContent =
-      `Price: ₹${vehicle.pricePerDay || 0}/day`;
-
-    document.getElementById("totalPrice").value = vehicle.pricePerDay || 0;
+    window.selectedVehicle = vehicle;
   } catch (err) {
-    console.error("❌ Error loading vehicle:", err.message);
-    alert("❌ Failed to load vehicle details. Redirecting...");
-    window.location.href = "index.html";
+    console.error("Error loading vehicle:", err);
+    document.getElementById("vehicleDetails").innerHTML =
+      "<p>❌ Failed to load vehicle details.</p>";
   }
 }
 
-// --- Handle booking form submit ---
-document.getElementById("bookingForm").addEventListener("submit", async function (e) {
-  e.preventDefault();
+async function submitBooking(event) {
+  event.preventDefault();
+
+  const startDate = document.getElementById("startDate").value;
+  const endDate = document.getElementById("endDate").value;
+
+  if (!startDate || !endDate) {
+    alert("Please select both start and end dates.");
+    return;
+  }
+
+  if (new Date(startDate) > new Date(endDate)) {
+    alert("End date must be after start date.");
+    return;
+  }
 
   const bookingData = {
-    vehicleId,
-    userName: this.fullname.value,
-    userEmail: this.email.value,
-    startDate: this.startdate.value,
-    endDate: this.enddate.value,
-    totalPrice: Number(document.getElementById("totalPrice").value)
+    vehicle: vehicleId,
+    startDate,
+    endDate,
   };
 
-  console.log("Submitting booking:", bookingData);
-
   try {
-    const res = await fetch(`${API_BASE}/bookings`, {
+    const res = await fetch("/api/bookings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(bookingData),
     });
 
-    if (!res.ok) throw new Error(`Booking failed (status: ${res.status})`);
+    const result = await res.json();
 
-    alert(`✅ Booking confirmed for ${bookingData.userName}`);
-    window.location.href = "bookings.html";
+    if (res.ok) {
+      alert("✅ Booking successful!");
+      window.location.href = "bookings.html"; 
+    } else {
+      alert("❌ Booking failed: " + (result.error || "Unknown error"));
+    }
   } catch (err) {
-    console.error("❌ Error booking:", err.message);
-    alert("❌ Failed to create booking. Please try again.");
+    console.error("Error submitting booking:", err);
+    alert("❌ Booking failed. Please try again later.");
   }
-});
+}
 
-// --- Load vehicle details on page load ---
+document.getElementById("bookingForm")?.addEventListener("submit", submitBooking);
+
 loadVehicle();
