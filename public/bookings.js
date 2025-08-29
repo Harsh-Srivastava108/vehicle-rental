@@ -1,11 +1,7 @@
-// Detect which page we are on
+
 const isSingleBookingPage = window.location.pathname.includes("booking.html");
 const isAllBookingsPage = window.location.pathname.includes("bookings.html");
 
-// ✅ Backend base URL
-const API_BASE = "https://vehicle-rental-vxjx.onrender.com/api";
-
-// ------------------- SINGLE BOOKING PAGE (booking.html) -------------------
 if (isSingleBookingPage) {
   const params = new URLSearchParams(window.location.search);
   const vehicleId = params.get("vehicleId");
@@ -17,10 +13,9 @@ if (isSingleBookingPage) {
     window.location.href = "index.html";
   }
 
-  // ✅ Load vehicle details
   async function loadVehicle() {
     try {
-      const res = await fetch(`${API_BASE}/vehicles/${vehicleId}`);
+      const res = await fetch(`http://localhost:5000/api/vehicles/${vehicleId}`);
       if (!res.ok) throw new Error("Failed to fetch vehicle");
 
       const vehicle = await res.json();
@@ -32,7 +27,6 @@ if (isSingleBookingPage) {
       document.getElementById("vehiclePrice").textContent =
         `Price: ₹${vehicle.pricePerDay}/day`;
 
-      // store price in hidden field
       document.getElementById("totalPrice").value = vehicle.pricePerDay;
     } catch (err) {
       console.error("Error loading vehicle:", err);
@@ -41,12 +35,11 @@ if (isSingleBookingPage) {
     }
   }
 
-  // ✅ Handle booking form submit
   document.getElementById("bookingForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const bookingData = {
-      vehicleId,
+      vehicleId, // backend will store under `vehicle`
       userName: this.fullname.value,
       userEmail: this.email.value,
       startDate: this.startdate.value,
@@ -55,7 +48,7 @@ if (isSingleBookingPage) {
     };
 
     try {
-      const res = await fetch(`${API_BASE}/bookings`, {
+      const res = await fetch("http://localhost:5000/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bookingData)
@@ -74,11 +67,10 @@ if (isSingleBookingPage) {
   loadVehicle();
 }
 
-// ------------------- ALL BOOKINGS PAGE (bookings.html) -------------------
 if (isAllBookingsPage) {
   async function loadBookings() {
     try {
-      const res = await fetch(`${API_BASE}/bookings`);
+      const res = await fetch("http://localhost:5000/api/bookings");
       if (!res.ok) throw new Error("Failed to fetch bookings");
 
       const bookings = await res.json();
