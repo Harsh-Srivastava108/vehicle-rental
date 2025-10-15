@@ -89,12 +89,49 @@ I'm always open to learning and collaborating on innovative projects that push t
 
 If you're looking for a motivated and curious intern, I'd love to connect and explore how I can contribute to your team!</p>
             </a>
+
+             </a>
+            <a href="https://www.linkedin.com/in/mayank-6a900b307/?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" class="developer-card">
+                <img src="images/mayank.png" alt="Mayank">
+                <h3>Mayank</h3>
+                <p><strong>B.Tech CSE Student | AI/ML & WebDev | Algorithms | Building Intelligent Solutions</strong></p>
+                <p>I am a Computer Science Engineering student with solid foundations in programming, Data Structures, and Algorithms. I am passionate about the convergence of Artificial Intelligence and Web Development, focusing on translating creative thinking into clean, efficient code. I have strengthened my technical and analytical skills through multiple real-world projects. I am constantly exploring new technologies, enjoy collaborating in teams, and am driven to build user-focused solutions that make a meaningful impact in the tech industry.</p>
+            </a>
         </div>
     </div>
 </main>
 
 <footer>
-    <p>© 2025 Rent-A-Vehicle | Developed by Nikhil Kumar Jha & Harsh Srivastava</p>
+    <p>© 2025 Rent-A-Vehicle | Developed by Nikhil Kumar Jha & Harsh Srivastava & Mayank</p>
 </footer>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const navLinks = document.querySelector(".nav-links");
+    const token = localStorage.getItem("token");
+
+    const loginListItem = Array.from(navLinks.querySelectorAll("li")).find(li => 
+      li.querySelector('a[href="login.html"]')
+    );
+
+    if (token && loginListItem) {
+      const logoutListItem = document.createElement("li");
+      logoutListItem.innerHTML = `<a href="#" id="logoutButton">Logout</a>`;
+      
+      loginListItem.replaceWith(logoutListItem);
+
+      document.getElementById("logoutButton").addEventListener("click", function(e) {
+        e.preventDefault(); 
+
+        localStorage.removeItem("token");
+        localStorage.removeItem("fullname");
+
+        alert("You have been logged out successfully.");
+        window.location.href = "login.html";
+      });
+    }
+  });
+</script>
+
 </body>
 </html>
